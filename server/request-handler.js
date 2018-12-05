@@ -13,7 +13,8 @@ this file and include it in basic-server.js so that it actually works.
 **************************************************************/
 var http = require('http');
 var url = require('url');
-
+var data = require('./data.js');
+var dateFormat = require('dateformat');
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -37,9 +38,37 @@ var requestHandler = function(request, response) {
   // The outgoing status.
   var statusCode = 200;
 
-  if (urlparts.pathname !== '/classes/messages') {
+  console.log(`this ${request.url}`);
+
+  if (request.url !== '/classes/messages') {
     statusCode = 404;
-  };
+  } else if (request.method === 'POST') {
+    request.on('data', chunk => {
+      var now = new Date();
+      var createdAt = dateFormat(now, 'isoDateTime');
+      var message = JSON.parse(chunk.toString());
+      message.createdAt = createdAt;
+      data.results.push(message);
+    });
+    statusCode = 201;
+  }
+  
+  //data sent
+  //user name
+  //message
+  //room (not always)
+  //need [created at]
+
+  //post handler.js
+  //get handler.js
+
+
+  // createdAt: "2018-12-03T00:24:07.325Z"
+  // objectId: "39yFDtvEGC"
+  // roomname: "lobby"
+  // text: "-"
+  // updatedAt: "2018-12-03T00:24:07.325Z"
+  // username: "-"
   
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
@@ -48,7 +77,7 @@ var requestHandler = function(request, response) {
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
+  headers['Content-Type'] = 'application/json';
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
@@ -61,7 +90,16 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end('Hello, World!');
+  response.end(JSON.stringify(data));
+
+
+};
+
+var defaultCorsHeaders = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'access-control-allow-headers': 'content-type, accept',
+  'access-control-max-age': 10 // Seconds.
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
@@ -73,12 +111,7 @@ var requestHandler = function(request, response) {
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
-var defaultCorsHeaders = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'access-control-allow-headers': 'content-type, accept',
-  'access-control-max-age': 10 // Seconds.
-};
 
 exports.requestHandler = requestHandler;
 
+// open -a Google\ Chrome --args --disable-web-security --user-data-dir
