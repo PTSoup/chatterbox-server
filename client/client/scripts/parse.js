@@ -18,7 +18,7 @@ var Parse = {
     $.ajax({
       url: Parse.server,
       type: 'GET',
-      data: { order: 'createdAt' },
+      data: { order: '-createdAt', where: roomname },
       contentType: 'application/json',
       success: successCB,
       error: errorCB || function(error) {

@@ -104,3 +104,8 @@ describe('Node Server Request Listener Function', function() {
   });
 
 });
+
+
+// capable of filtering rooms?
+// is it mutating the server data?
+// capable of handling options request?

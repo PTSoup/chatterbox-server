@@ -33,42 +33,44 @@ var requestHandler = function(request, response) {
   // console.logs in your code.
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
-  var urlparts = url.parse(request.url);
+  var urlparts = url.parse(request.url, true);
+  
+  console.log(urlparts);
   
   // The outgoing status.
-  var statusCode = 200;
+  var statusCode = 200; //get request to a URL that is allowed.
 
   console.log(`this ${request.url}`);
+  console.log(request);
 
-  if (request.url !== '/classes/messages') {
-    statusCode = 404;
+  var requestedData = {};
+
+
+  if (urlparts.pathname !== '/classes/messages') {
+    statusCode = 404; //url that is not allowed
   } else if (request.method === 'POST') {
     request.on('data', chunk => {
       var now = new Date();
       var createdAt = dateFormat(now, 'isoDateTime');
       var message = JSON.parse(chunk.toString());
       message.createdAt = createdAt;
-      data.results.push(message);
+      console.log(message);
+      data.results.unshift(message);
     });
-    statusCode = 201;
+    statusCode = 201; //successful post
+  } else if (request.method === 'GET') {
+    if (urlparts.query.where) {
+      var results = [];
+      data.results.forEach(message => {
+        if (message.roomname === urlparts.query.where) {
+          results.unshift(message);
+        }
+      });
+      requestedData.results = results;
+    } else {
+      requestedData = data;
+    }
   }
-  
-  //data sent
-  //user name
-  //message
-  //room (not always)
-  //need [created at]
-
-  //post handler.js
-  //get handler.js
-
-
-  // createdAt: "2018-12-03T00:24:07.325Z"
-  // objectId: "39yFDtvEGC"
-  // roomname: "lobby"
-  // text: "-"
-  // updatedAt: "2018-12-03T00:24:07.325Z"
-  // username: "-"
   
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
@@ -90,10 +92,11 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end(JSON.stringify(data));
+  response.end(JSON.stringify(requestedData));
 
 
 };
+
 
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
@@ -113,5 +116,3 @@ var defaultCorsHeaders = {
 // client from this domain by setting up static file serving.
 
 exports.requestHandler = requestHandler;
-
-// open -a Google\ Chrome --args --disable-web-security --user-data-dir
